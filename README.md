@@ -4,6 +4,10 @@ Parse JavaScript one character at a time to look for snippets in Templates.  Thi
 
 [![Build Status](https://travis-ci.org/ForbesLindesay/character-parser.png?branch=master)](https://travis-ci.org/ForbesLindesay/character-parser)
 
+## Installation
+
+    npm install character-parser
+
 ## Usage
 
 Work out how much depth changes:
