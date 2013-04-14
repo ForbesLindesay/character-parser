@@ -1,9 +1,10 @@
 exports = (module.exports = parse);
 exports.parse = parse;
-function parse(src, state, start, end) {
+function parse(src, state, options) {
+  options = options || {};
   state = state || exports.defaultState();
-  start = start || 0;
-  end = end || src.length;
+  var start = options.start || 0;
+  var end = options.end || src.length;
   var index = start;
   while (index < end) {
     if (state.roundDepth < 0 || state.curlyDepth < 0 || state.squareDepth < 0) {
@@ -15,11 +16,15 @@ function parse(src, state, start, end) {
 }
 
 exports.parseMax = parseMax;
-function parseMax(src, start) {
-  start = start || 0;
+function parseMax(src, options) {
+  options = options || {};
+  var start = options.start || 0;
   var index = start;
   var state = exports.defaultState();
   while (state.roundDepth >= 0 && state.curlyDepth >= 0 && state.squareDepth >= 0) {
+    if (index >= src.length) {
+      throw new Error('The end of the string was reached with no closing bracket found.');
+    }
     exports.parseChar(src[index++], state);
   }
   var end = index - 1;
@@ -31,11 +36,14 @@ function parseMax(src, start) {
 }
 
 exports.parseUntil = parseUntil;
-function parseUntil(src, delimiter, start) {
-  start = start || 0;
+function parseUntil(src, delimiter, options) {
+  options = options || {};
+  var includeLineComment = options.includeLineComment || false;
+  var start = options.start || 0;
   var index = start;
   var state = exports.defaultState();
-  while (state.singleQuote || state.doubleQuote || state.blockComment || state.lineComment || !startsWith(src, delimiter, index)) {
+  while (state.singleQuote || state.doubleQuote || state.blockComment ||
+         (!includeLineComment && state.lineComment) || !startsWith(src, delimiter, index)) {
     exports.parseChar(src[index++], state);
   }
   var end = index;
@@ -49,6 +57,8 @@ function parseUntil(src, delimiter, start) {
 
 exports.parseChar = parseChar;
 function parseChar(character, state) {
+  if (character.length !== 1) throw new Error('Character must be a string of length 1');
+  state = state || defaultState();
   if (state.lineComment) {
     if (character === '\n') {
       state.lineComment = false;
@@ -118,4 +128,4 @@ function startsWith(str, start, i) {
   return str.substr(i || 0, start.length) === start;
 }
 
-console.dir(parseUntil('foo.bar("%>").baz%> bing bong', '%>'));
+console.dir(parseUntil('foo.bar("%>").baz%> bing bong', '\n'));
