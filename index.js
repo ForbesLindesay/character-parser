@@ -127,5 +127,3 @@ function defaultState() {
 function startsWith(str, start, i) {
   return str.substr(i || 0, start.length) === start;
 }
-
-console.dir(parseUntil('foo.bar("%>").baz%> bing bong', '\n'));

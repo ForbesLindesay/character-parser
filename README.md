@@ -47,7 +47,7 @@ assert(section.start === 0);
 assert(section.end === 17);//exclusive end of string
 assert(section.src = 'foo.bar("%>").baz');
 
-var section = parser.parseUntil('<%foo.bar("%>").baz%> bing bong', '%>', 2);
+var section = parser.parseUntil('<%foo.bar("%>").baz%> bing bong', '%>', {start: 2});
 assert(section.start === 2);
 assert(section.end === 19);//exclusive end of string
 assert(section.src = 'foo.bar("%>").baz');
