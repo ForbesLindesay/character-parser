@@ -1,5 +1,5 @@
 var assert = require('better-assert');
-var parser = require('./');
+var parser = require('../');
 var parse = parser;
 
 it('works out how much depth changes', function () {
@@ -37,3 +37,14 @@ it('finds code up to a custom delimiter', function () {
   assert(section.end === 19);//exclusive end of string
   assert(section.src = 'foo.bar("%>").baz');
 });
+
+describe('regressions', function () {
+  describe('#1', function () {
+    it('parses regular expressions', function () {
+      var section = parser.parseMax('foo=/\\//g, bar="}") bing bong');
+      assert(section.start === 0);
+      assert(section.end === 18);//exclusive end of string
+      assert(section.src = 'foo=/\\//g, bar="}"');
+    })
+  })
+})
