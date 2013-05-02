@@ -196,9 +196,9 @@ function isKeyword(id) {
     return (id === 'if') || (id === 'in') || (id === 'do') || (id === 'var') || (id === 'for') || (id === 'new') ||
           (id === 'try') || (id === 'let') || (id === 'this') || (id === 'else') || (id === 'case') ||
           (id === 'void') || (id === 'with') || (id === 'enum') || (id === 'while') || (id === 'break') || (id === 'catch') ||
-          (id === 'throw') || (id === 'const') || (id === 'yield') || (id === 'class') || (id === 'super')
+          (id === 'throw') || (id === 'const') || (id === 'yield') || (id === 'class') || (id === 'super') ||
           (id === 'return') || (id === 'typeof') || (id === 'delete') || (id === 'switch') || (id === 'export') ||
-          (id === 'import') ||(id === 'default') || (id === 'finally') || (id === 'extends') (id === 'function') ||
+          (id === 'import') || (id === 'default') || (id === 'finally') || (id === 'extends') || (id === 'function') ||
           (id === 'continue') || (id === 'debugger') || (id === 'package') || (id === 'private') || (id === 'interface') ||
           (id === 'instanceof') || (id === 'implements') || (id === 'protected') || (id === 'public') || (id === 'static') ||
           (id === 'yield') || (id === 'let');
