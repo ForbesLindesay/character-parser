@@ -42,7 +42,7 @@ function parseUntil(src, delimiter, options) {
   var start = options.start || 0;
   var index = start;
   var state = exports.defaultState();
-  while (state.singleQuote || state.doubleQuote || state.regexp || state.blockComment ||
+  while (state.isString() || state.regexp || state.blockComment ||
          (!includeLineComment && state.lineComment) || !startsWith(src, delimiter, index)) {
     exports.parseChar(src[index++], state);
   }
@@ -136,23 +136,30 @@ function parseChar(character, state) {
   return state;
 }
 
-exports.defaultState = defaultState;
-function defaultState() {
-  return {
-    lineComment: false,
-    blockComment: false,
+exports.defaultState = function () { return new State() };
+function State() {
+  this.lineComment = false;
+  this.blockComment = false;
 
-    singleQuote: false,
-    doubleQuote: false,
-    regexp: false,
-    escaped: false,
+  this.singleQuote = false;
+  this.doubleQuote = false;
+  this.regexp = false;
+  this.escaped = false;
 
-    roundDepth: 0,
-    curlyDepth: 0,
-    squareDepth: 0,
+  this.roundDepth = 0;
+  this.curlyDepth = 0;
+  this.squareDepth = 0;
 
-    history: ''
-  };
+  this.history = ''
+}
+State.prototype.isString = function () {
+  return this.singleQuote || this.doubleQuote;
+}
+State.prototype.isComment = function () {
+  return this.lineComment || this.blockComment;
+}
+State.prototype.isNesting = function () {
+  return this.isString() || this.isComment() || this.regexp || this.roundDepth > 0 || this.curlyDepth > 0 || this.squareDepth > 0
 }
 
 function startsWith(str, start, i) {
