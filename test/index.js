@@ -45,6 +45,11 @@ describe('regressions', function () {
       assert(section.start === 0);
       assert(section.end === 18);//exclusive end of string
       assert(section.src = 'foo=/\\//g, bar="}"');
+
+      var section = parser.parseMax('foo = typeof /\\//g, bar="}") bing bong');
+      assert(section.start === 0);
+      //assert(section.end === 18);//exclusive end of string
+      assert(section.src = 'foo = typeof /\\//g, bar="}"');
     })
   })
 })

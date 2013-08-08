@@ -94,10 +94,10 @@ function parseChar(character, state) {
       state.escaped = false;
     }
   } else if (lastChar === '/' && character === '/') {
-    history = history.substr(1);
+    state.history = state.history.substr(1);
     state.lineComment = true;
   } else if (lastChar === '/' && character === '*') {
-    history = history.substr(1);
+    state.history = state.history.substr(1);
     state.blockComment = true;
   } else if (character === '/') {
     //could be start of regexp or divide sign
@@ -110,7 +110,7 @@ function parseChar(character, state) {
       //this is probably best left though
     } else if (isPunctuator(history[0])) {
       state.regexp = true;
-    } else if (/^\w+\b/.test(history) && isKeyword(/^\w+\b/.exec(history)[0])) {
+    } else if (/^\w+\b/.test(history) && isKeyword(/^\w+\b/.exec(history)[0].split('').reverse().join(''))) {
       state.regexp = true;
     } else {
       // assume it's divide
