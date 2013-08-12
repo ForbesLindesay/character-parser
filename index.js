@@ -58,7 +58,7 @@ function parseUntil(src, delimiter, options) {
 exports.parseChar = parseChar;
 function parseChar(character, state) {
   if (character.length !== 1) throw new Error('Character must be a string of length 1');
-  state = state || defaultState();
+  state = state || exports.defaultState();
   var wasComment = state.blockComment || state.lineComment;
   var lastChar = state.history ? state.history[0] : '';
   if (state.lineComment) {
@@ -99,22 +99,8 @@ function parseChar(character, state) {
   } else if (lastChar === '/' && character === '*') {
     state.history = state.history.substr(1);
     state.blockComment = true;
-  } else if (character === '/') {
-    //could be start of regexp or divide sign
-    var history = state.history.replace(/^\s*/, '');
-    if (history[0] === ')') {
-      //unless its an `if`, `while`, `for` or `with` it's a divide
-      //this is probably best left though
-    } else if (history[0] === '}') {
-      //unless it's a function expression, it's a regexp
-      //this is probably best left though
-    } else if (isPunctuator(history[0])) {
-      state.regexp = true;
-    } else if (/^\w+\b/.test(history) && isKeyword(/^\w+\b/.exec(history)[0].split('').reverse().join(''))) {
-      state.regexp = true;
-    } else {
-      // assume it's divide
-    }
+  } else if (character === '/' && isRegexp(state.history)) {
+    state.regexp = true;
   } else if (character === '\'') {
     state.singleQuote = true;
   } else if (character === '"') {
@@ -166,6 +152,7 @@ function startsWith(str, start, i) {
   return str.substr(i || 0, start.length) === start;
 }
 
+exports.isPunctuator = isPunctuator
 function isPunctuator(c) {
   var code = c.charCodeAt(0)
 
@@ -197,16 +184,34 @@ function isPunctuator(c) {
       return true;
     default:
       return false;
-    }
+  }
 }
+exports.isKeyword = isKeyword
 function isKeyword(id) {
-    return (id === 'if') || (id === 'in') || (id === 'do') || (id === 'var') || (id === 'for') || (id === 'new') ||
-          (id === 'try') || (id === 'let') || (id === 'this') || (id === 'else') || (id === 'case') ||
-          (id === 'void') || (id === 'with') || (id === 'enum') || (id === 'while') || (id === 'break') || (id === 'catch') ||
-          (id === 'throw') || (id === 'const') || (id === 'yield') || (id === 'class') || (id === 'super') ||
-          (id === 'return') || (id === 'typeof') || (id === 'delete') || (id === 'switch') || (id === 'export') ||
-          (id === 'import') || (id === 'default') || (id === 'finally') || (id === 'extends') || (id === 'function') ||
-          (id === 'continue') || (id === 'debugger') || (id === 'package') || (id === 'private') || (id === 'interface') ||
-          (id === 'instanceof') || (id === 'implements') || (id === 'protected') || (id === 'public') || (id === 'static') ||
-          (id === 'yield') || (id === 'let');
+  return (id === 'if') || (id === 'in') || (id === 'do') || (id === 'var') || (id === 'for') || (id === 'new') ||
+         (id === 'try') || (id === 'let') || (id === 'this') || (id === 'else') || (id === 'case') ||
+         (id === 'void') || (id === 'with') || (id === 'enum') || (id === 'while') || (id === 'break') || (id === 'catch') ||
+         (id === 'throw') || (id === 'const') || (id === 'yield') || (id === 'class') || (id === 'super') ||
+         (id === 'return') || (id === 'typeof') || (id === 'delete') || (id === 'switch') || (id === 'export') ||
+         (id === 'import') || (id === 'default') || (id === 'finally') || (id === 'extends') || (id === 'function') ||
+         (id === 'continue') || (id === 'debugger') || (id === 'package') || (id === 'private') || (id === 'interface') ||
+         (id === 'instanceof') || (id === 'implements') || (id === 'protected') || (id === 'public') || (id === 'static') ||
+         (id === 'yield') || (id === 'let');
+}
+
+function isRegexp(history) {
+  //could be start of regexp or divide sign
+
+  history = history.replace(/^\s*/, '');
+
+  //unless its an `if`, `while`, `for` or `with` it's a divide, so we assume it's a divide
+  if (history[0] === ')') return false;
+  //unless it's a function expression, it's a regexp, so we assume it's a regexp
+  if (history[0] === '}') return true;
+  //any punctuation means it's a regexp
+  if (isPunctuator(history[0])) return true;
+  //if the last thing was a keyword then it must be a regexp (e.g. `typeof /foo/`)
+  if (/^\w+\b/.test(history) && isKeyword(/^\w+\b/.exec(history)[0].split('').reverse().join(''))) return true;
+
+  return false;
 }
