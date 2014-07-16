@@ -52,4 +52,16 @@ describe('regressions', function () {
       assert(section.src = 'foo = typeof /\\//g, bar="}"');
     })
   })
+  describe('#6', function () {
+    it('parses block comments', function () {
+      var section = parser.parseMax('/* ) */) bing bong');
+      assert(section.start === 0);
+      assert(section.end === 7);//exclusive end of string
+      assert(section.src = '/* ) */)');
+      var section = parser.parseMax('/* /) */) bing bong');
+      assert(section.start === 0);
+      assert(section.end === 8);//exclusive end of string
+      assert(section.src = '/* ) */)');
+    })
+  })
 })
