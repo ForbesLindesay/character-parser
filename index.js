@@ -209,8 +209,7 @@ function isKeyword(id) {
          (id === 'return') || (id === 'typeof') || (id === 'delete') || (id === 'switch') || (id === 'export') ||
          (id === 'import') || (id === 'default') || (id === 'finally') || (id === 'extends') || (id === 'function') ||
          (id === 'continue') || (id === 'debugger') || (id === 'package') || (id === 'private') || (id === 'interface') ||
-         (id === 'instanceof') || (id === 'implements') || (id === 'protected') || (id === 'public') || (id === 'static') ||
-         (id === 'yield') || (id === 'let');
+         (id === 'instanceof') || (id === 'implements') || (id === 'protected') || (id === 'public') || (id === 'static');
 }
 
 function isRegexp(history) {
