@@ -18,24 +18,24 @@ it('finds contents of bracketed expressions', function () {
   var section = parser.parseMax('foo="(", bar="}") bing bong');
   assert(section.start === 0);
   assert(section.end === 16);//exclusive end of string
-  assert(section.src = 'foo="(", bar="}"');
+  assert(section.src === 'foo="(", bar="}"');
 
   var section = parser.parseMax('{foo="(", bar="}"} bing bong', {start: 1});
   assert(section.start === 1);
   assert(section.end === 17);//exclusive end of string
-  assert(section.src = 'foo="(", bar="}"');
+  assert(section.src === 'foo="(", bar="}"');
 });
 
 it('finds code up to a custom delimiter', function () {
   var section = parser.parseUntil('foo.bar("%>").baz%> bing bong', '%>');
   assert(section.start === 0);
   assert(section.end === 17);//exclusive end of string
-  assert(section.src = 'foo.bar("%>").baz');
+  assert(section.src === 'foo.bar("%>").baz');
 
   var section = parser.parseUntil('<%foo.bar("%>").baz%> bing bong', '%>', {start: 2});
   assert(section.start === 2);
   assert(section.end === 19);//exclusive end of string
-  assert(section.src = 'foo.bar("%>").baz');
+  assert(section.src === 'foo.bar("%>").baz');
 });
 
 describe('regressions', function () {
@@ -44,12 +44,12 @@ describe('regressions', function () {
       var section = parser.parseMax('foo=/\\//g, bar="}") bing bong');
       assert(section.start === 0);
       assert(section.end === 18);//exclusive end of string
-      assert(section.src = 'foo=/\\//g, bar="}"');
+      assert(section.src === 'foo=/\\//g, bar="}"');
 
       var section = parser.parseMax('foo = typeof /\\//g, bar="}") bing bong');
       assert(section.start === 0);
       //assert(section.end === 18);//exclusive end of string
-      assert(section.src = 'foo = typeof /\\//g, bar="}"');
+      assert(section.src === 'foo = typeof /\\//g, bar="}"');
     })
   })
   describe('#6', function () {
@@ -57,11 +57,11 @@ describe('regressions', function () {
       var section = parser.parseMax('/* ) */) bing bong');
       assert(section.start === 0);
       assert(section.end === 7);//exclusive end of string
-      assert(section.src = '/* ) */)');
+      assert(section.src === '/* ) */');
       var section = parser.parseMax('/* /) */) bing bong');
       assert(section.start === 0);
       assert(section.end === 8);//exclusive end of string
-      assert(section.src = '/* ) */)');
+      assert(section.src === '/* /) */');
     })
   })
 })
