@@ -117,25 +117,28 @@ A state is an object with the following structure
 
 ```js
 {
-  lineComment: false, //true if inside a line comment
+  lineComment: false,  //true if inside a line comment
   blockComment: false, //true if inside a block comment
 
-  singleQuote: false, //true if inside a single quoted string
-  doubleQuote: false, //true if inside a double quoted string
-  regexp:      false, //true if inside a regular expression
-  escaped: false, //true if in a string and the last character was an escape character
+  singleQuote: false,  //true if inside a single quoted string
+  doubleQuote: false,  //true if inside a double quoted string
+  regexp:      false,  //true if inside a regular expression
+  escaped: false,      //true if in a string and the last character was an escape character
+  dollarSign: false,   //true if in a template string and the last character was a dollar sign `$`
 
-  roundDepth: 0, //number of un-closed open `(` brackets
-  curlyDepth: 0, //number of un-closed open `{` brackets
-  squareDepth: 0 //number of un-closed open `[` brackets
+  roundDepth: 0,       //number of un-closed open `(` brackets
+  curlyDepth: 0,       //number of un-closed open `{` brackets
+  squareDepth: 0,      //number of un-closed open `[` brackets
+  backTickDepth: 0,    //depth of nested template strings
+  interpolationDepth: 0//depth of nested template string interpolations
 }
 ```
 
 It also has the following useful methods:
 
-- `.isString()` returns `true` if the current location is inside a string.
+- `.isString()` returns `true` if the current location is inside a string or template string, unless it is in a template interpolation.
 - `.isComment()` returns `true` if the current location is inside a comment.
-- `isNesting()` returns `true` if the current location is anything but at the top level, i.e. with no nesting.
+- `.isNesting()` returns `true` if the current location is anything but at the top level, i.e. with no nesting.
 
 ## License
 
