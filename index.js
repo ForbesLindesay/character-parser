@@ -160,6 +160,9 @@ State.prototype.isComment = function () {
 State.prototype.isNesting = function () {
   return this.isString() || this.isComment() || this.regexp || this.roundDepth > 0 || this.curlyDepth > 0 || this.squareDepth > 0
 }
+State.prototype.next = function (character) {
+  return parseChar(character, this);
+}
 
 function startsWith(str, start, i) {
   return str.substr(i || 0, start.length) === start;
