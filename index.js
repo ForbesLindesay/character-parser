@@ -8,7 +8,9 @@ function parse(src, state, options) {
   var index = start;
   while (index < end) {
     if (state.roundDepth < 0 || state.curlyDepth < 0 || state.squareDepth < 0) {
-      throw new SyntaxError('Mismatched Bracket: ' + src[index - 1]);
+      var err = new SyntaxError('Mismatched Bracket: ' + src[index - 1]);
+      err.code = 'CHARACTER_PARSER:MISMATCHED_BRACKET';
+      throw err;
     }
     exports.parseChar(src[index++], state);
   }
@@ -23,7 +25,9 @@ function parseMax(src, options) {
   var state = exports.defaultState();
   while (state.roundDepth >= 0 && state.curlyDepth >= 0 && state.squareDepth >= 0) {
     if (index >= src.length) {
-      throw new Error('The end of the string was reached with no closing bracket found.');
+      var err = new Error('The end of the string was reached with no closing bracket found.');
+      err.code = 'CHARACTER_PARSER:END_OF_STRING_REACHED';
+      throw err;
     }
     exports.parseChar(src[index++], state);
   }
@@ -49,11 +53,15 @@ function parseMaxBracket(src, bracket, options) {
   var state = exports.defaultState();
   var prop = bracketToProp[bracket];
   if (prop === undefined) {
-    throw new Error('Bracket specified (' + JSON.stringify(bracket) + ') is not one of ")", "]", or "}";');
+    var err = new Error('Bracket specified (' + JSON.stringify(bracket) + ') is not one of ")", "]", or "}";');
+    err.code = 'CHARACTER_PARSER:INVALID_BRACKET';
+    throw err;
   }
   while (state[prop] >= 0) {
     if (index >= src.length) {
-      throw new Error('The end of the string was reached with no closing bracket "' + bracket + '" found.');
+      var err = new Error('The end of the string was reached with no closing bracket found.');
+      err.code = 'CHARACTER_PARSER:END_OF_STRING_REACHED';
+      throw err;
     }
     exports.parseChar(src[index++], state);
   }
@@ -86,7 +94,11 @@ function parseUntil(src, delimiter, options) {
 
 exports.parseChar = parseChar;
 function parseChar(character, state) {
-  if (character.length !== 1) throw new Error('Character must be a string of length 1');
+  if (character.length !== 1) {
+    var err = new Error('Character must be a string of length 1');
+    err.code = 'CHARACTER_PARSER:CHAR_LENGTH_NOT_ONE';
+    throw err;
+  }
   state = state || exports.defaultState();
   state.src = state.src || '';
   state.src += character;
