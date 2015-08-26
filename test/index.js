@@ -26,6 +26,18 @@ it('finds contents of bracketed expressions', function () {
   assert(section.src === 'foo="(", bar="}"');
 });
 
+it('finds contents of bracketed expressions with specified bracket', function () {
+  var section = parser.parseMaxBracket('foo="(", bar="}")] bing bong', ']');
+  assert(section.start === 0);
+  assert(section.end === 17);//exclusive end of string
+  assert(section.src === 'foo="(", bar="}")');
+
+  var section = parser.parseMaxBracket('foo="(", bar="}")] bing bong', ')');
+  assert(section.start === 0);
+  assert(section.end === 16);//exclusive end of string
+  assert(section.src === 'foo="(", bar="}"');
+});
+
 it('finds code up to a custom delimiter', function () {
   var section = parser.parseUntil('foo.bar("%>").baz%> bing bong', '%>');
   assert(section.start === 0);

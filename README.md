@@ -83,6 +83,18 @@ Parses the source until the first unmatched close bracket (any of `)`, `}`, `]`)
 }
 ```
 
+### parseMaxBracket(src, bracket, options = {start: 0})
+
+Parses the source until the first unmatched specified `bracket` (any of `)`, `}`, `]`). It returns an object with the structure:
+
+```js
+{
+  start: 0,//index of first character of string
+  end: 13,//index of first character after the end of string
+  src: 'source string'
+}
+```
+
 ### parseUntil(src, delimiter, options = {start: 0, includeLineComment: false})
 
 Parses the source until the first occurence of `delimiter` which is not in a string or a comment.  If `includeLineComment` is `true`, it will still count if the delimiter occurs in a line comment, but not in a block comment.  It returns an object with the structure:
