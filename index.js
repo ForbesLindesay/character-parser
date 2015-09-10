@@ -35,6 +35,36 @@ function parseMax(src, options) {
   };
 }
 
+var bracketToProp = {
+  ')': 'roundDepth',
+  '}': 'curlyDepth',
+  ']': 'squareDepth'
+};
+
+exports.parseMaxBracket = parseMaxBracket;
+function parseMaxBracket(src, bracket, options) {
+  options = options || {};
+  var start = options.start || 0;
+  var index = start;
+  var state = exports.defaultState();
+  var prop = bracketToProp[bracket];
+  if (prop === undefined) {
+    throw new Error('Bracket specified (' + JSON.stringify(bracket) + ') is not one of ")", "]", or "}";');
+  }
+  while (state[prop] >= 0) {
+    if (index >= src.length) {
+      throw new Error('The end of the string was reached with no closing bracket "' + bracket + '" found.');
+    }
+    exports.parseChar(src[index++], state);
+  }
+  var end = index - 1;
+  return {
+    start: start,
+    end: end,
+    src: src.substring(start, end)
+  };
+}
+
 exports.parseUntil = parseUntil;
 function parseUntil(src, delimiter, options) {
   options = options || {};
@@ -53,7 +83,6 @@ function parseUntil(src, delimiter, options) {
     src: src.substring(start, end)
   };
 }
-
 
 exports.parseChar = parseChar;
 function parseChar(character, state) {
