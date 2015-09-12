@@ -63,6 +63,8 @@ Delimiters are ignored if they are inside strings or comments.
 
 ## API
 
+All methods may throw an exception. The exception contains an additional `code` property that always starts with `CHARACTER_PARSER:` that is unique for the error.
+
 ### parse(str, state = defaultState(), options = {start: 0, end: src.length})
 
 Parse a string starting at the index start, and return the state after parsing that string.
