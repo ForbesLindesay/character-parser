@@ -103,10 +103,12 @@ function parseChar(character, state) {
     if (character === '\n') {
       state.lineComment = false;
     }
+    return end();
   } else if (state.blockComment) {
     if (state.lastChar === '*' && character === '/') {
       state.blockComment = false;
     }
+    return end();
   } else if (state.singleQuote) {
     if (character === '\'' && !state.escaped) {
       state.singleQuote = false;
@@ -115,6 +117,7 @@ function parseChar(character, state) {
     } else {
       state.escaped = false;
     }
+    return end();
   } else if (state.doubleQuote) {
     if (character === '"' && !state.escaped) {
       state.doubleQuote = false;
@@ -123,7 +126,36 @@ function parseChar(character, state) {
     } else {
       state.escaped = false;
     }
-  } else if (state.regexp) {
+    return end();
+  } else if (state.backTickDepth) {
+    if (character === '$' && !state.escaped) {
+      state.dollarSign = true;
+      return end();
+    } else if (character === '{' && state.dollarSign && !state.escaped) {
+      state.interpolationDepth++;
+      state.dollarSign = false;
+      return end();
+    } else {
+      state.dollarSign = false;
+      if (character === '\\' && !state.escaped) {
+        state.escaped = true;
+        return end();
+      } else if (character === '`' && !state.escaped) {
+        if (state.interpolationDepth >= state.backTickDepth) {
+          state.backTickDepth++;
+        } else {
+          state.backTickDepth--;
+        }
+        return end();
+      } else if (character === '}' && !state.escaped && state.interpolationDepth === state.backTickDepth) {
+        state.interpolationDepth--;
+        return end();
+      } else {
+        state.escaped = false;
+      }
+    }
+  }
+  if (state.regexp) {
     if (character === '/' && !state.escaped) {
       state.regexp = false;
     } else if (character === '\\' && !state.escaped) {
@@ -144,6 +176,8 @@ function parseChar(character, state) {
     state.singleQuote = true;
   } else if (character === '"') {
     state.doubleQuote = true;
+  } else if (character === '`') {
+    state.backTickDepth++;
   } else if (character === '(') {
     state.roundDepth++;
   } else if (character === ')') {
@@ -157,9 +191,12 @@ function parseChar(character, state) {
   } else if (character === ']') {
     state.squareDepth--;
   }
-  if (!state.blockComment && !state.lineComment && !wasComment) state.history = character + state.history;
-  state.lastChar = character; // store last character for ending block comments
-  return state;
+  function end() {
+    if (!state.blockComment && !state.lineComment && !wasComment) state.history = character + state.history;
+    state.lastChar = character; // store last character for ending block comments
+    return state;
+  }
+  return end();
 }
 
 exports.defaultState = function () { return new State() };
@@ -172,16 +209,19 @@ function State() {
   this.regexp = false;
 
   this.escaped = false;
+  this.dollarSign = false;
 
   this.roundDepth = 0;
   this.curlyDepth = 0;
   this.squareDepth = 0;
+  this.backTickDepth = 0;
+  this.interpolationDepth = 0;
 
   this.history = ''
   this.lastChar = ''
 }
 State.prototype.isString = function () {
-  return this.singleQuote || this.doubleQuote;
+  return this.singleQuote || this.doubleQuote || (!!this.backTickDepth && this.backTickDepth > this.interpolationDepth);
 }
 State.prototype.isComment = function () {
   return this.lineComment || this.blockComment;
