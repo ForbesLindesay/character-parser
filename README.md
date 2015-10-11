@@ -63,6 +63,8 @@ Delimiters are ignored if they are inside strings or comments.
 
 ## API
 
+All methods may throw an exception in the case of syntax errors. The exception contains an additional `code` property that always starts with `CHARACTER_PARSER:` that is unique for the error.
+
 ### parse(str, state = defaultState(), options = {start: 0, end: src.length})
 
 Parse a string starting at the index start, and return the state after parsing that string.
@@ -71,33 +73,9 @@ If you want to parse one string in multiple sections you should keep passing the
 
 Returns a `State` object.
 
-### parseMax(src, options = {start: 0})
+### parseUntil(src, delimiter, options = {start: 0, ignoreLineComment: false})
 
-Parses the source until the first unmatched close bracket (any of `)`, `}`, `]`).  It returns an object with the structure:
-
-```js
-{
-  start: 0,//index of first character of string
-  end: 13,//index of first character after the end of string
-  src: 'source string'
-}
-```
-
-### parseMaxBracket(src, bracket, options = {start: 0})
-
-Parses the source until the first unmatched specified `bracket` (any of `)`, `}`, `]`). It returns an object with the structure:
-
-```js
-{
-  start: 0,//index of first character of string
-  end: 13,//index of first character after the end of string
-  src: 'source string'
-}
-```
-
-### parseUntil(src, delimiter, options = {start: 0, includeLineComment: false})
-
-Parses the source until the first occurence of `delimiter` which is not in a string or a comment.  If `includeLineComment` is `true`, it will still count if the delimiter occurs in a line comment, but not in a block comment.  It returns an object with the structure:
+Parses the source until the first occurence of `delimiter` which is not in a string or a comment.  If `ignoreLineComment` is `true`, it will still count if the delimiter occurs in a line comment.  It returns an object with the structure:
 
 ```js
 {
