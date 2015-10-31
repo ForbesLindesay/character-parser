@@ -10,53 +10,47 @@ Parse JavaScript one character at a time to look for snippets in Templates.  Thi
 
 ## Usage
 
+### Parsing
+
 Work out how much depth changes:
 
 ```js
 var state = parse('foo(arg1, arg2, {\n  foo: [a, b\n');
-assert(state.roundDepth === 1);
-assert(state.curlyDepth === 1);
-assert(state.squareDepth === 1);
+assert.deepEqual(state.stack, [')', '}', ']']);
+
 parse('    c, d]\n  })', state);
-assert(state.squareDepth === 0);
-assert(state.curlyDepth === 0);
-assert(state.roundDepth === 0);
+assert.deepEqual(state.stack, []);
 ```
-
-### Bracketed Expressions
-
-Find all the contents of a bracketed expression:
-
-```js
-var section = parser.parseMax('foo="(", bar="}") bing bong');
-assert(section.start === 0);
-assert(section.end === 16);//exclusive end of string
-assert(section.src = 'foo="(", bar="}"');
-
-
-var section = parser.parseMax('{foo="(", bar="}"} bing bong', {start: 1});
-assert(section.start === 1);
-assert(section.end === 17);//exclusive end of string
-assert(section.src = 'foo="(", bar="}"');
-```
-
-The bracketed expression parsing simply parses up to but excluding the first unmatched closed bracket (`)`, `}`, `]`).  It is clever enough to ignore brackets in comments or strings.
-
 
 ### Custom Delimited Expressions
 
 Find code up to a custom delimiter:
 
 ```js
+// EJS-style
 var section = parser.parseUntil('foo.bar("%>").baz%> bing bong', '%>');
 assert(section.start === 0);
-assert(section.end === 17);//exclusive end of string
+assert(section.end === 17); // exclusive end of string
 assert(section.src = 'foo.bar("%>").baz');
 
 var section = parser.parseUntil('<%foo.bar("%>").baz%> bing bong', '%>', {start: 2});
 assert(section.start === 2);
-assert(section.end === 19);//exclusive end of string
+assert(section.end === 19); // exclusive end of string
 assert(section.src = 'foo.bar("%>").baz');
+
+// Jade-style
+var section = parser.parseUntil('#{(function () {return "a"})()}', '}', {start: 2})
+assert(section.start === 2);
+assert(section.end === 31); // exclusive end of string
+assert(section.src === '(function () { return "a"})()')
+
+// Dumb parsing
+// Stop at first delimiter encountered, doesn't matter if it's nested or not
+var section = parser.parseUntil('#{(function () {return "a"})()}', '}', {start: 2, ignoreNesting: true})
+assert(section.start === 2);
+assert(section.end === 26); // exclusive end of string
+assert(section.src === '(function () { return "a"')
+''
 ```
 
 Delimiters are ignored if they are inside strings or comments.
@@ -73,9 +67,15 @@ If you want to parse one string in multiple sections you should keep passing the
 
 Returns a `State` object.
 
-### parseUntil(src, delimiter, options = {start: 0, ignoreLineComment: false})
+### parseUntil(src, delimiter, options = {start: 0, ignoreLineComment: false, ignoreNesting: false})
 
-Parses the source until the first occurence of `delimiter` which is not in a string or a comment.  If `ignoreLineComment` is `true`, it will still count if the delimiter occurs in a line comment.  It returns an object with the structure:
+Parses the source until the first occurence of `delimiter` which is not in a string or a comment.
+
+If `ignoreLineComment` is `true`, it will still count if the delimiter occurs in a line comment.
+
+If `ignoreNesting` is `true`, it will stop at the first bracket, not taking into account if the bracket part of nesting or not. See example above.
+
+It returns an object with the structure:
 
 ```js
 {
@@ -101,31 +101,39 @@ Returns `true` if `character` represents punctuation in JavaScript.
 
 Returns `true` if `name` is a keyword in JavaScript.
 
+### TOKEN_TYPES & BRACKETS
+
+Objects whose values can be a frame in the `stack` property of a State (documented below).
+
 ## State
 
 A state is an object with the following structure
 
 ```js
 {
-  lineComment: false, //true if inside a line comment
-  blockComment: false, //true if inside a block comment
+  stack: [],          // stack of detected brackets; the outermost is [0]
+  regexpStart: false, // true if a slash is just encountered and a REGEXP state has just been added to the stack
 
-  singleQuote: false, //true if inside a single quoted string
-  doubleQuote: false, //true if inside a double quoted string
-  regexp:      false, //true if inside a regular expression
-  escaped: false, //true if in a string and the last character was an escape character
+  escaped: false,     // true if in a string and the last character was an escape character
+  hasDollar: false,   // true if in a template string and the last character was a dollar sign
 
-  roundDepth: 0, //number of un-closed open `(` brackets
-  curlyDepth: 0, //number of un-closed open `{` brackets
-  squareDepth: 0 //number of un-closed open `[` brackets
+  src: '',            // the concatenated source string
+  history: '',        // reversed `src`
+  lastChar: ''        // last parsed character
 }
 ```
 
+`stack` property can contain any of the following:
+
+- Any of the property values of `characterParser.TOKEN_TYPES`
+- Any of the property values of `characterParser.BRACKETS` (the end bracket, not the starting bracket)
+
 It also has the following useful methods:
 
+- `.current()` returns the innermost bracket (i.e. the last stack frame).
 - `.isString()` returns `true` if the current location is inside a string.
 - `.isComment()` returns `true` if the current location is inside a comment.
-- `isNesting()` returns `true` if the current location is anything but at the top level, i.e. with no nesting.
+- `.isNesting([opts])` returns `true` if the current location is not at the top level, i.e. if the stack is not empty. If `opts.ignoreLineComment` is `true`, line comments are not counted as a level, so for `// a` it will still return false.
 
 ## License
 
