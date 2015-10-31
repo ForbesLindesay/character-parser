@@ -30,7 +30,7 @@ function parse(src, state, options) {
   var end = options.end || src.length;
   var index = start;
   while (index < end) {
-    exports.parseChar(src[index++], state);
+    parseChar(src[index++], state);
   }
   return state;
 }
@@ -41,9 +41,7 @@ function parseUntil(src, delimiter, options) {
   var start = options.start || 0;
   var index = start;
   var state = exports.defaultState();
-  while (
-    index < src.length
-  ) {
+  while (index < src.length) {
     if ((options.ignoreNesting || !state.isNesting(options)) && startsWith(src, delimiter, index)) {
       var end = index;
       return {
@@ -52,7 +50,7 @@ function parseUntil(src, delimiter, options) {
         src: src.substring(start, end)
       };
     }
-    exports.parseChar(src[index++], state);
+    parseChar(src[index++], state);
   }
   var err = new Error('The end of the string was reached with no closing bracket found.');
   err.code = 'CHARACTER_PARSER:END_OF_STRING_REACHED';
