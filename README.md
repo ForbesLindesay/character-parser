@@ -136,6 +136,10 @@ It also has the following useful methods:
 - `.isComment()` returns `true` if the current location is inside a comment.
 - `.isNesting([opts])` returns `true` if the current location is not at the top level, i.e. if the stack is not empty. If `opts.ignoreLineComment` is `true`, line comments are not counted as a level, so for `// a` it will still return false.
 
+### Errors
+
+All errors thrown by character-parser has a `code` property attached to it that allows one to identify what sort of error is thrown. For errors thrown from `parse` and `parseUntil`, an additional `index` property is available.
+
 ## Transition from v1
 
 In character-parser@2, we have changed the APIs quite a bit. These are some notes that will help you transition to the new version.
