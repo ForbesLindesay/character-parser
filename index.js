@@ -1,13 +1,17 @@
 'use strict';
 
-var LINE_COMMENT = '//';
-var BLOCK_COMMENT = '/**/';
-var SINGLE_QUOTE = '\'';
-var DOUBLE_QUOTE = '"';
-var TEMPLATE_QUOTE = '`';
-var REGEXP = '//g';
+exports = (module.exports = parse);
 
-var BRACKETS = {
+var TOKEN_TYPES = exports.TOKEN_TYPES = {
+  LINE_COMMENT: '//',
+  BLOCK_COMMENT: '/**/',
+  SINGLE_QUOTE: '\'',
+  DOUBLE_QUOTE: '"',
+  TEMPLATE_QUOTE: '`',
+  REGEXP: '//g'
+}
+
+var BRACKETS = exports.BRACKETS = {
   '(': ')',
   '{': '}',
   '[': ']'
@@ -18,7 +22,6 @@ var BRACKETS_REVERSED = {
   ']': '['
 };
 
-exports = (module.exports = parse);
 exports.parse = parse;
 function parse(src, state, options) {
   options = options || {};
@@ -77,17 +80,17 @@ function parseChar(character, state) {
     state.regexpStart = false;
   }
   switch (state.current()) {
-    case LINE_COMMENT:
+    case TOKEN_TYPES.LINE_COMMENT:
       if (character === '\n') {
         state.stack.pop();
       }
       break;
-    case BLOCK_COMMENT:
+    case TOKEN_TYPES.BLOCK_COMMENT:
       if (state.lastChar === '*' && character === '/') {
         state.stack.pop();
       }
       break;
-    case SINGLE_QUOTE:
+    case TOKEN_TYPES.SINGLE_QUOTE:
       if (character === '\'' && !state.escaped) {
         state.stack.pop();
       } else if (character === '\\' && !state.escaped) {
@@ -96,7 +99,7 @@ function parseChar(character, state) {
         state.escaped = false;
       }
       break;
-    case DOUBLE_QUOTE:
+    case TOKEN_TYPES.DOUBLE_QUOTE:
       if (character === '"' && !state.escaped) {
         state.stack.pop();
       } else if (character === '\\' && !state.escaped) {
@@ -105,7 +108,7 @@ function parseChar(character, state) {
         state.escaped = false;
       }
       break;
-    case TEMPLATE_QUOTE:
+    case TOKEN_TYPES.TEMPLATE_QUOTE:
       if (character === '`' && !state.escaped) {
         state.stack.pop();
         state.hasDollar = false;
@@ -121,7 +124,7 @@ function parseChar(character, state) {
         state.hasDollar = false;
       }
       break;
-    case REGEXP:
+    case TOKEN_TYPES.REGEXP:
       if (character === '/' && !state.escaped) {
         state.stack.pop();
       } else if (character === '\\' && !state.escaped) {
@@ -143,22 +146,22 @@ function parseChar(character, state) {
       } else if (lastChar === '/' && character === '/') {
         // Don't include comments in history
         state.history = state.history.substr(1);
-        state.stack.push(LINE_COMMENT);
+        state.stack.push(TOKEN_TYPES.LINE_COMMENT);
       } else if (lastChar === '/' && character === '*') {
         // Don't include comment in history
         state.history = state.history.substr(1);
-        state.stack.push(BLOCK_COMMENT);
+        state.stack.push(TOKEN_TYPES.BLOCK_COMMENT);
       } else if (character === '/' && isRegexp(state.history)) {
-        state.stack.push(REGEXP);
+        state.stack.push(TOKEN_TYPES.REGEXP);
         // N.B. if the next character turns out to be a `*` or a `/`
         //      then this isn't actually a regexp
         state.regexpStart = true;
       } else if (character === '\'') {
-        state.stack.push(SINGLE_QUOTE);
+        state.stack.push(TOKEN_TYPES.SINGLE_QUOTE);
       } else if (character === '"') {
-        state.stack.push(DOUBLE_QUOTE);
+        state.stack.push(TOKEN_TYPES.DOUBLE_QUOTE);
       } else if (character === '`') {
-        state.stack.push(TEMPLATE_QUOTE);
+        state.stack.push(TOKEN_TYPES.TEMPLATE_QUOTE);
       }
       break;
   }
@@ -186,18 +189,18 @@ State.prototype.current = function () {
 };
 State.prototype.isString = function () {
   return (
-    this.current() === SINGLE_QUOTE ||
-    this.current() === DOUBLE_QUOTE ||
-    this.current() === TEMPLATE_QUOTE
+    this.current() === TOKEN_TYPES.SINGLE_QUOTE ||
+    this.current() === TOKEN_TYPES.DOUBLE_QUOTE ||
+    this.current() === TOKEN_TYPES.TEMPLATE_QUOTE
   );
 }
 State.prototype.isComment = function () {
-  return this.current() === LINE_COMMENT || this.current() === BLOCK_COMMENT;
+  return this.current() === TOKEN_TYPES.LINE_COMMENT || this.current() === TOKEN_TYPES.BLOCK_COMMENT;
 }
 State.prototype.isNesting = function (opts) {
   if (
     opts && opts.ignoreLineComment &&
-    this.stack.length === 1 && this.stack[0] === LINE_COMMENT
+    this.stack.length === 1 && this.stack[0] === TOKEN_TYPES.LINE_COMMENT
   ) {
     // if we are only inside a line comment, and line comments are ignored
     // don't count it as nesting
