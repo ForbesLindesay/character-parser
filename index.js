@@ -44,7 +44,7 @@ function parseUntil(src, delimiter, options) {
   while (
     index < src.length
   ) {
-    if (!state.isNesting(options) && startsWith(src, delimiter, index)) {
+    if ((options.ignoreNesting || !state.isNesting(options)) && startsWith(src, delimiter, index)) {
       var end = index;
       return {
         start: start,
