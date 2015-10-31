@@ -39,17 +39,18 @@ assert(section.end === 19); // exclusive end of string
 assert(section.src = 'foo.bar("%>").baz');
 
 // Jade-style
-var section = parser.parseUntil('#{(function () {return "a"})()}', '}', {start: 2})
+var section = parser.parseUntil('#[p= [1, 2][i]]', ']', {start: 2})
 assert(section.start === 2);
-assert(section.end === 31); // exclusive end of string
-assert(section.src === '(function () { return "a"})()')
+assert(section.end === 14); // exclusive end of string
+assert(section.src === 'p= [1, 2][i]')
 
 // Dumb parsing
 // Stop at first delimiter encountered, doesn't matter if it's nested or not
-var section = parser.parseUntil('#{(function () {return "a"})()}', '}', {start: 2, ignoreNesting: true})
+// This is the character-parser@1 default behavior.
+var section = parser.parseUntil('#[p= [1, 2][i]]', '}', {start: 2, ignoreNesting: true})
 assert(section.start === 2);
-assert(section.end === 26); // exclusive end of string
-assert(section.src === '(function () { return "a"')
+assert(section.end === 10); // exclusive end of string
+assert(section.src === 'p= [1, 2')
 ''
 ```
 
