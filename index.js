@@ -30,7 +30,13 @@ function parse(src, state, options) {
   var end = options.end || src.length;
   var index = start;
   while (index < end) {
-    parseChar(src[index++], state);
+    try {
+      parseChar(src[index], state);
+    } catch (ex) {
+      ex.index = index;
+      throw ex;
+    }
+    index++;
   }
   return state;
 }
@@ -50,10 +56,17 @@ function parseUntil(src, delimiter, options) {
         src: src.substring(start, end)
       };
     }
-    parseChar(src[index++], state);
+    try {
+      parseChar(src[index], state);
+    } catch (ex) {
+      ex.index = index;
+      throw ex;
+    }
+    index++;
   }
   var err = new Error('The end of the string was reached with no closing bracket found.');
   err.code = 'CHARACTER_PARSER:END_OF_STRING_REACHED';
+  err.index = index;
   throw err;
 }
 
