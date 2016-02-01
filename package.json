@@ -26,5 +26,8 @@
   "devDependencies": {
     "istanbul": "~0.3.22",
     "testit": "~2.0.2"
+  },
+  "dependencies": {
+    "is-regex": "^1.0.3"
   }
 }

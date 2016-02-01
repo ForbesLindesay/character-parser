@@ -42,6 +42,14 @@ test('parseUntil', function () {
       end: 15,
       src: 'x = `foo${`)`}`'
     });
+
+    var section = parser.parseUntil('x = `foo${`)`}`])', /^[\])]/);
+    assert.deepEqual(section, {
+      start: 0,
+      end: 15,
+      src: 'x = `foo${`)`}`'
+    });
+
     try {
       var section = parser.parseUntil('x = `foo${)}`)', ')');
     } catch (ex) {
