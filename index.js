@@ -1,5 +1,7 @@
 'use strict';
 
+var objIsRegex = require('is-regex');
+
 exports = (module.exports = parse);
 
 var TOKEN_TYPES = exports.TOKEN_TYPES = {
@@ -48,7 +50,7 @@ function parseUntil(src, delimiter, options) {
   var index = start;
   var state = exports.defaultState();
   while (index < src.length) {
-    if ((options.ignoreNesting || !state.isNesting(options)) && startsWith(src, delimiter, index)) {
+    if ((options.ignoreNesting || !state.isNesting(options)) && matches(src, delimiter, index)) {
       var end = index;
       return {
         start: start,
@@ -220,8 +222,12 @@ State.prototype.isNesting = function (opts) {
   return !!this.stack.length;
 }
 
-function startsWith(str, start, i) {
-  return str.substr(i || 0, start.length) === start;
+function matches(str, matcher, i) {
+  if (objIsRegex(matcher)) {
+    return matcher.test(str.substr(i || 0));
+  } else {
+    return str.substr(i || 0, matcher.length) === matcher;
+  }
 }
 
 exports.isPunctuator = isPunctuator
