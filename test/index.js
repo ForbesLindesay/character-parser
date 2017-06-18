@@ -1,12 +1,13 @@
 var assert = require('assert');
 var test = require('testit');
 var parser = require('../');
-var parse = parser;
+var parse = parser.parse;
+var StackElement = parser.StackElement;
 
 test('parse', function () {
   test('works out how much depth changes', function () {
     var state = parse('foo(arg1, arg2, {\n  foo: [a, b\n');
-    assert.deepEqual(state.stack, [ ')', '}', ']' ]);
+    assert.deepEqual(state.stack, [ StackElement.ROUND_BRACKET, StackElement.CURLY_BRACKET, StackElement.SQUARE_BRACKET ]);
 
     parse('    c, d]\n  })', state);
     assert.deepEqual(state.stack, []);
