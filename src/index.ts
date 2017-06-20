@@ -1,5 +1,3 @@
-const objIsRegex = require('is-regex');
-
 export enum TOKEN_TYPES {
   LINE_COMMENT = 'LINE_COMMENT',
   BLOCK_COMMENT = 'BLOCK_COMMENT',
@@ -103,13 +101,13 @@ export function parse(src: string, state: State = defaultState(), options: {read
 }
 export default parse;
 
-export function parseUntil(src: string, delimiter: string, options: {readonly start?: number, readonly end?: number, readonly ignoreLineComment?: boolean, readonly ignoreNesting?: boolean} = {}) {
+export function parseUntil(src: string, delimiter: string | RegExp, options: {readonly start?: number, readonly end?: number, readonly ignoreLineComment?: boolean, readonly ignoreNesting?: boolean} = {}) {
   options = options || {};
   const start = options.start || 0;
   const index = start;
   const state = defaultState();
   for (let index = start; index < src.length; index++) {
-    if ((options.ignoreNesting || !state.isNesting(options)) && startsWith(src, delimiter, index)) {
+    if ((options.ignoreNesting || !state.isNesting(options)) && matches(src, delimiter, index)) {
       const end = index;
       return {
         start: start,
@@ -119,11 +117,11 @@ export function parseUntil(src: string, delimiter: string, options: {readonly st
     }
     try {
       parseChar(src[index], state);
+      console.dir({src: src.substr(0, index) + '^' + src.substr(index), state});
     } catch (ex) {
       ex.index = index;
       throw ex;
     }
-    index++;
   }
   const err = new Error('The end of the string was reached with no closing bracket found.');
   (err as any).code = 'CHARACTER_PARSER:END_OF_STRING_REACHED';
@@ -243,8 +241,11 @@ export function parseChar(character: string, state: State = defaultState()): Sta
   return state;
 }
 
-function startsWith(str: string, start: string, i: number = 0): boolean {
-  return str.substr(i || 0, start.length) === start;
+function matches(str: string, matcher: string | RegExp, i: number = 0): boolean {
+  if (typeof matcher === 'string') {
+    return str.substr(i || 0, matcher.length) === matcher;
+  }
+  return matcher.test(str.substr(i || 0));
 }
 
 export function isPunctuator(c: string): boolean {

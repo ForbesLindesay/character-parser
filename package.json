@@ -37,7 +37,6 @@
     "typescript": "^2.4.0"
   },
   "dependencies": {
-    "@types/node": "^7.0.31",
-    "is-regex": "^1.0.3"
+    "@types/node": "^7.0.31"
   }
 }
