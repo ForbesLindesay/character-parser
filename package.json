@@ -31,7 +31,7 @@
   "author": "ForbesLindesay",
   "license": "MIT",
   "devDependencies": {
-    "flowgen2": "^2.0.0-alpha.11",
+    "flowgen2": "^2.0.0-alpha.12",
     "istanbul": "~0.3.22",
     "testit": "~2.0.2",
     "typescript": "^2.4.0"
