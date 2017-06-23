@@ -1,57 +1,114 @@
-'use strict';
-
-var objIsRegex = require('is-regex');
-
-exports = (module.exports = parse);
-
-var TOKEN_TYPES = exports.TOKEN_TYPES = {
-  LINE_COMMENT: '//',
-  BLOCK_COMMENT: '/**/',
-  SINGLE_QUOTE: '\'',
-  DOUBLE_QUOTE: '"',
-  TEMPLATE_QUOTE: '`',
-  REGEXP: '//g'
+export enum TOKEN_TYPES {
+  LINE_COMMENT = 'LINE_COMMENT',
+  BLOCK_COMMENT = 'BLOCK_COMMENT',
+  SINGLE_QUOTE = 'SINGLE_QUOTE',
+  DOUBLE_QUOTE = 'DOUBLE_QUOTE',
+  TEMPLATE_QUOTE = 'TEMPLATE_QUOTE',
+  REGEXP = 'REGEXP',
+  ROUND_BRACKET = 'ROUND_BRACKET',
+  CURLY_BRACKET = 'CURLY_BRACKET',
+  SQUARE_BRACKET = 'SQUARE_BRACKET',
 }
 
-var BRACKETS = exports.BRACKETS = {
-  '(': ')',
-  '{': '}',
-  '[': ']'
-};
-var BRACKETS_REVERSED = {
-  ')': '(',
-  '}': '{',
-  ']': '['
-};
+type OpenBracket = '(' | '{' | '[';
+type CloseBracket = ')' | '}' | ']';
+function isOpenBracket(character: string): character is OpenBracket {
+  return character === '(' || character === '{' || character === '[';
+}
+function isCloseBracket(character: string): character is CloseBracket {
+  return character === ')' || character === '}' || character === ']';
+}
+function getBracketType(openBracket: OpenBracket): TOKEN_TYPES {
+  switch (openBracket) {
+    case '(':
+      return TOKEN_TYPES.ROUND_BRACKET;
+    case '{':
+      return TOKEN_TYPES.CURLY_BRACKET;
+    case '[':
+      return TOKEN_TYPES.SQUARE_BRACKET;
+  }
+}
+function isMatchingBracket(closeBracket: CloseBracket, bracketType: TOKEN_TYPES): boolean {
+  switch (bracketType) {
+    case TOKEN_TYPES.ROUND_BRACKET:
+      return closeBracket === ')';
+    case TOKEN_TYPES.CURLY_BRACKET:
+      return closeBracket === '}';
+    case TOKEN_TYPES.SQUARE_BRACKET:
+      return closeBracket === ']';
+    default:
+      return false;
+  }
+}
 
-exports.parse = parse;
-function parse(src, state, options) {
+export class State {
+  stack:  Array<TOKEN_TYPES> = [];
+  regexpStart: boolean = false;
+  escaped: boolean = false;
+  hasDollar: boolean = false;
+
+  src: string = '';
+  history: string = '';
+  lastChar: string = '';
+
+  current(): TOKEN_TYPES {
+    return this.stack[this.stack.length - 1];
+  }
+  isString(): boolean {
+    return (
+      this.current() === TOKEN_TYPES.SINGLE_QUOTE ||
+      this.current() === TOKEN_TYPES.DOUBLE_QUOTE ||
+      this.current() === TOKEN_TYPES.TEMPLATE_QUOTE
+    );
+  }
+  isComment(): boolean {
+    return this.current() === TOKEN_TYPES.LINE_COMMENT || this.current() === TOKEN_TYPES.BLOCK_COMMENT;
+  }
+  isNesting(opts?: {readonly ignoreLineComment?: boolean}): boolean {
+    if (
+      opts && opts.ignoreLineComment &&
+      this.stack.length === 1 && this.stack[0] === TOKEN_TYPES.LINE_COMMENT
+    ) {
+      // if we are only inside a line comment, and line comments are ignored
+      // don't count it as nesting
+      return false;
+    }
+    return !!this.stack.length;
+  }
+}
+export function defaultState() {
+  return new State();
+}
+
+
+
+export function parse(src: string, state: State = defaultState(), options: {readonly start?: number, readonly end?: number} = {}): State {
   options = options || {};
-  state = state || exports.defaultState();
-  var start = options.start || 0;
-  var end = options.end || src.length;
-  var index = start;
-  while (index < end) {
+  state = state || defaultState();
+
+  const start = options.start || 0;
+  const end = options.end || src.length;
+  let index = start;
+  for (let index = start; index < end; index++) {
     try {
-      parseChar(src[index], state);
+      state = parseChar(src[index], state);
     } catch (ex) {
-      ex.index = index;
+      (ex as any).index = index;
       throw ex;
     }
-    index++;
   }
   return state;
 }
+export default parse;
 
-exports.parseUntil = parseUntil;
-function parseUntil(src, delimiter, options) {
+export function parseUntil(src: string, delimiter: string | RegExp, options: {readonly start?: number, readonly end?: number, readonly ignoreLineComment?: boolean, readonly ignoreNesting?: boolean} = {}) {
   options = options || {};
-  var start = options.start || 0;
-  var index = start;
-  var state = exports.defaultState();
-  while (index < src.length) {
+  const start = options.start || 0;
+  const index = start;
+  const state = defaultState();
+  for (let index = start; index < src.length; index++) {
     if ((options.ignoreNesting || !state.isNesting(options)) && matches(src, delimiter, index)) {
-      var end = index;
+      const end = index;
       return {
         start: start,
         end: end,
@@ -60,30 +117,29 @@ function parseUntil(src, delimiter, options) {
     }
     try {
       parseChar(src[index], state);
+      console.dir({src: src.substr(0, index) + '^' + src.substr(index), state});
     } catch (ex) {
       ex.index = index;
       throw ex;
     }
-    index++;
   }
-  var err = new Error('The end of the string was reached with no closing bracket found.');
-  err.code = 'CHARACTER_PARSER:END_OF_STRING_REACHED';
-  err.index = index;
+  const err = new Error('The end of the string was reached with no closing bracket found.');
+  (err as any).code = 'CHARACTER_PARSER:END_OF_STRING_REACHED';
+  (err as any).index = index;
   throw err;
 }
 
-exports.parseChar = parseChar;
-function parseChar(character, state) {
+export function parseChar(character: string, state: State = defaultState()): State {
   if (character.length !== 1) {
-    var err = new Error('Character must be a string of length 1');
+    const err = new Error('Character must be a string of length 1');
     err.name = 'InvalidArgumentError';
-    err.code = 'CHARACTER_PARSER:CHAR_LENGTH_NOT_ONE';
+    (err as any).code = 'CHARACTER_PARSER:CHAR_LENGTH_NOT_ONE';
     throw err;
   }
-  state = state || exports.defaultState();
+  state = state || defaultState();
   state.src += character;
-  var wasComment = state.isComment();
-  var lastChar = state.history ? state.history[0] : '';
+  const wasComment = state.isComment();
+  const lastChar = state.history ? state.history[0] : '';
 
 
   if (state.regexpStart) {
@@ -131,7 +187,7 @@ function parseChar(character, state) {
       } else if (character === '$' && !state.escaped) {
         state.hasDollar = true;
       } else if (character === '{' && state.hasDollar) {
-        state.stack.push(BRACKETS[character]);
+        state.stack.push(TOKEN_TYPES.CURLY_BRACKET);
       } else {
         state.escaped = false;
         state.hasDollar = false;
@@ -147,12 +203,12 @@ function parseChar(character, state) {
       }
       break;
     default:
-      if (character in BRACKETS) {
-        state.stack.push(BRACKETS[character]);
-      } else if (character in BRACKETS_REVERSED) {
-        if (state.current() !== character) {
-          var err = new SyntaxError('Mismatched Bracket: ' + character);
-          err.code = 'CHARACTER_PARSER:MISMATCHED_BRACKET';
+      if (isOpenBracket(character)) {
+        state.stack.push(getBracketType(character));
+      } else if (isCloseBracket(character)) {
+        if (!isMatchingBracket(character, state.current())) {
+          const err = new SyntaxError('Mismatched Bracket: ' + character);
+          (err as any).code = 'CHARACTER_PARSER:MISMATCHED_BRACKET';
           throw err;
         };
         state.stack.pop();
@@ -185,55 +241,16 @@ function parseChar(character, state) {
   return state;
 }
 
-exports.defaultState = function () { return new State() };
-function State() {
-  this.stack = [];
-
-  this.regexpStart = false;
-  this.escaped = false;
-  this.hasDollar = false;
-
-  this.src = '';
-  this.history = ''
-  this.lastChar = ''
-}
-State.prototype.current = function () {
-  return this.stack[this.stack.length - 1];
-};
-State.prototype.isString = function () {
-  return (
-    this.current() === TOKEN_TYPES.SINGLE_QUOTE ||
-    this.current() === TOKEN_TYPES.DOUBLE_QUOTE ||
-    this.current() === TOKEN_TYPES.TEMPLATE_QUOTE
-  );
-}
-State.prototype.isComment = function () {
-  return this.current() === TOKEN_TYPES.LINE_COMMENT || this.current() === TOKEN_TYPES.BLOCK_COMMENT;
-}
-State.prototype.isNesting = function (opts) {
-  if (
-    opts && opts.ignoreLineComment &&
-    this.stack.length === 1 && this.stack[0] === TOKEN_TYPES.LINE_COMMENT
-  ) {
-    // if we are only inside a line comment, and line comments are ignored
-    // don't count it as nesting
-    return false;
-  }
-  return !!this.stack.length;
-}
-
-function matches(str, matcher, i) {
-  if (objIsRegex(matcher)) {
-    return matcher.test(str.substr(i || 0));
-  } else {
+function matches(str: string, matcher: string | RegExp, i: number = 0): boolean {
+  if (typeof matcher === 'string') {
     return str.substr(i || 0, matcher.length) === matcher;
   }
+  return matcher.test(str.substr(i || 0));
 }
 
-exports.isPunctuator = isPunctuator
-function isPunctuator(c) {
+export function isPunctuator(c: string): boolean {
   if (!c) return true; // the start of a string is a punctuator
-  var code = c.charCodeAt(0)
+  const code = c.charCodeAt(0)
 
   switch (code) {
     case 46:   // . dot
@@ -266,8 +283,7 @@ function isPunctuator(c) {
   }
 }
 
-exports.isKeyword = isKeyword
-function isKeyword(id) {
+export function isKeyword(id: string): boolean {
   return (id === 'if') || (id === 'in') || (id === 'do') || (id === 'var') || (id === 'for') || (id === 'new') ||
          (id === 'try') || (id === 'let') || (id === 'this') || (id === 'else') || (id === 'case') ||
          (id === 'void') || (id === 'with') || (id === 'enum') || (id === 'while') || (id === 'break') || (id === 'catch') ||
@@ -278,7 +294,7 @@ function isKeyword(id) {
          (id === 'instanceof') || (id === 'implements') || (id === 'protected') || (id === 'public') || (id === 'static');
 }
 
-function isRegexp(history) {
+function isRegexp(history: string): boolean {
   //could be start of regexp or divide sign
 
   history = history.replace(/^\s*/, '');
@@ -290,7 +306,8 @@ function isRegexp(history) {
   //any punctuation means it's a regexp
   if (isPunctuator(history[0])) return true;
   //if the last thing was a keyword then it must be a regexp (e.g. `typeof /foo/`)
-  if (/^\w+\b/.test(history) && isKeyword(/^\w+\b/.exec(history)[0].split('').reverse().join(''))) return true;
+  const match = /^\w+\b/.exec(history);
+  if (match && isKeyword(match[0].split('').reverse().join(''))) return true;
 
   return false;
 }
