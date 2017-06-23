@@ -117,7 +117,6 @@ export function parseUntil(src: string, delimiter: string | RegExp, options: {re
     }
     try {
       parseChar(src[index], state);
-      console.dir({src: src.substr(0, index) + '^' + src.substr(index), state});
     } catch (ex) {
       ex.index = index;
       throw ex;
