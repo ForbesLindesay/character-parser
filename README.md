@@ -70,7 +70,7 @@ Returns a `State` object.
 
 ### parseUntil(src, delimiter, options = {start: 0, ignoreLineComment: false, ignoreNesting: false})
 
-Parses the source until the first occurence of `delimiter` which is not in a string or a comment.
+Parses the source until the first occurrence of `delimiter` which is not in a string or a comment.
 
 If `ignoreLineComment` is `true`, it will still count if the delimiter occurs in a line comment.
 
