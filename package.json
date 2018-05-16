@@ -36,7 +36,5 @@
     "testit": "~3.0.0",
     "typescript": "^2.4.0"
   },
-  "dependencies": {
-    "@types/node": "^9.3.0"
-  }
+  "dependencies": {}
 }
