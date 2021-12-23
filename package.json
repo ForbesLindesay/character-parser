@@ -33,7 +33,7 @@
   "devDependencies": {
     "flowgen2": "^2.0.0-alpha.12",
     "istanbul": "~0.4.5",
-    "testit": "~3.0.0",
+    "testit": "~3.1.0",
     "typescript": "^2.4.0"
   },
   "dependencies": {}
