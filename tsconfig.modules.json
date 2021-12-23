@@ -1,0 +1,9 @@
+{
+  "compileOnSave": true,
+  "compilerOptions": {
+    "declaration": true,
+    "outDir": "lib-next",
+    "strict": true,
+    "target": "ES2020"
+  }
+}
