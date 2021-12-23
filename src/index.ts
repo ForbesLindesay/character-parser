@@ -89,7 +89,7 @@ export function parse(src: string, state: State = defaultState(), options: {read
   const start = options.start || 0;
   const end = options.end || src.length;
   let index = start;
-  for (let index = start; index < end; index++) {
+  for (; index < end; index++) {
     try {
       state = parseChar(src[index], state);
     } catch (ex) {
@@ -104,9 +104,9 @@ export default parse;
 export function parseUntil(src: string, delimiter: string | RegExp, options: {readonly start?: number, readonly end?: number, readonly ignoreLineComment?: boolean, readonly ignoreNesting?: boolean} = {}) {
   options = options || {};
   const start = options.start || 0;
-  const index = start;
+  let index = start;
   const state = defaultState();
-  for (let index = start; index < src.length; index++) {
+  for (; index < src.length; index++) {
     if ((options.ignoreNesting || !state.isNesting(options)) && matches(src, delimiter, index)) {
       const end = index;
       return {
@@ -117,7 +117,7 @@ export function parseUntil(src: string, delimiter: string | RegExp, options: {re
     }
     try {
       parseChar(src[index], state);
-    } catch (ex) {
+    } catch (ex: any) {
       ex.index = index;
       throw ex;
     }
